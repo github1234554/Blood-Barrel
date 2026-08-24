@@ -9,6 +9,13 @@
                 "-fansi-escape-codes",
                 "-g",
                 "${file}",
+                "-I/opt/homebrew/opt/raylib/include",
+                "-L/opt/homebrew/opt/raylib/lib",
+                "-lraylib",
+                "-framework", "CoreVideo",
+                "-framework", "IOKit",
+                "-framework", "Cocoa",
+                "-framework", "OpenGL",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}"
             ],
