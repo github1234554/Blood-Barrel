@@ -36,11 +36,14 @@ void InputHandling(PlayerSettings& player){
         // Propell
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){// Shotgun propulsion
             player.angle = atan2((GetMouseY() - player.position.y), (player.position.x - GetMouseX()));
-            if (player.angle > 0){
-                player.gravity = -player.blastPower * sin(player.angle);
+            if (player.gravity < -450 && GetMouseY() > player.position.y){
+                player.gravity += -player.blastPower * sin(player.angle) * 0.4;
+            }
+            else if(player.gravity > 0 && GetMouseY() < player.position.y){
+                player.gravity += -player.blastPower * sin(player.angle) * 0.6;
             }
             else{
-                player.gravity += -player.blastPower * sin(player.angle);
+                player.gravity = -player.blastPower * sin(player.angle);
             }
             if ((player.velocityX > 0 && GetMouseX() < player.position.x) || (player.velocityX < 0 && GetMouseX() > player.position.x)){
                 player.velocityX += player.blastPower * cos(player.angle) * player.blastXMod * 0.2;
@@ -75,7 +78,7 @@ void Render(const PlayerSettings& player){
     BeginDrawing(); // Begins drawing
     ClearBackground(RAYWHITE); // Clears the background with white color
     DrawCircleV(player.position, player.radius, MAROON); // Player
-    DrawText(std::to_string(player.angle).c_str(), 10, 10, 20, BLUE); // Debug text
+    DrawText(std::to_string(player.velocityX).c_str(), 10, 10, 20, BLUE); // Debug text
     EndDrawing(); // Ends drawing
 }
 
