@@ -9,6 +9,7 @@
 #include <cmath>     // REQUIRED for M_PI, atan2, sin, and cos
 #include <string>    // REQUIRED for std::to_string in your Render function
 #include <algorithm> // REQUIRED for std::erase
+#include <cassert>   // REQUIRED for assert
 
 using namespace std; // This line allows you to use standard library functions and objects without the std:: prefix.
 
@@ -25,81 +26,135 @@ pair<float, Vector2> CheckCollision(const Rectangle& active, Vector2 velocity, f
 // ||               STRUCTS                ||
 // ==========================================
 
+//ENTITY STRUCT >>>
+struct Entity{
+    protected:
+        //Transform
+        Vector2 position = {0.0f, 0.0f}; // Player position
+        Vector2 velocity = {0.0f, 0.0f}; // Gravity (not used in this example)
+        float gravityMod = 7000.0f;// Gravity modifier
+        float t = 1.0f; // Time of collision (not used in this example)
+
+        //Collision
+        Vector2 CollisionBoxWH;
+        Rectangle collisionBox;
+    
+    public:
+        //Update transform and collision box
+        void Update(float dt, const Rectangle& level){
+            //APPLYING MOVEMENT >>>
+            velocity.y += gravityMod * dt; // Increases gravity (not used in this example)
+
+            pair<float, Vector2> checkCollisionResult = CheckCollision(collisionBox, velocity, dt, level);
+
+            t = checkCollisionResult.first; // Checks for collision with the level
+            float tInv = 1.0f - t; // Inverse of t (used for collision response)
+
+            float collisionNormalX = checkCollisionResult.second.x; // Gets the collision normal in the X direction
+            float collisionNormalY = checkCollisionResult.second.y; // Gets the collision normal in the Y direction
+
+            const float epsilon = 0.001f; // Small value to prevent floating-point precision issues
+
+            // Collision response>>>
+
+            //Temporary material properties (dampening)
+            float dampening = 0.5f;
+            float friction = 0.8f;
+
+            if (t < 1.0f) { // If there is a collision
+                if (abs(collisionNormalX) > epsilon) {velocity.x = -velocity.x * dampening;} // Reflects the velocity in the X direction if there is a collision
+                if (abs(collisionNormalY) > epsilon) {velocity.y = -velocity.y * dampening; velocity.x = velocity.x * friction;} // Reflects the gravity
+
+                if (abs(velocity.y) < 300 && std::round(t * 10.0f) / 10.0f <= 0.8f) {velocity.y = 0;} // If the gravity is small enough, set it to 0 (not used in this example)
+                std::cout << abs(velocity.y) << ", t: " << std::round(t * 10.0f) / 10.0f << std::endl; // Debugging line to check if the condition is true or false
+
+                position.y += velocity.y * tInv* dt; // Applies gravity to the player (not used in this example)
+                position.x += velocity.x * tInv * dt; // Applies velocity to the player
+            }
+            else{
+                position.y += velocity.y * t * dt; // Applies gravity to the player (not used in this example)
+                position.x += velocity.x * t * dt; // Applies velocity to the player
+            }
+
+            collisionBox = {position.x - CollisionBoxWH.x / 2, position.y - CollisionBoxWH.y / 2, CollisionBoxWH.x, CollisionBoxWH.y};
+        }
+};
 
 //PLAYER STRUCT >>>
-struct PlayerStats{
-    //INITIALIZE PLAYER
-    Vector2 position;
-    float gravity = 0.0f; // Gravity (not used in this example)
-    float gravityMod = 120.0f;// Gravity modifier
-    
-    //Temporary
-    float radius = 30.0f; // Radius of the circle (player)
+struct Player : public Entity{
+    private:
+        //Temporary
+        float radius = 30.0f; // Radius of the circle (player)
+        float ShotgunWidth = 20.0f;
+        float ShotgunHeight = radius + 20.0f;
+        Rectangle shotgun;
+            
+        float angle = 0.0f;// Blast angle
+        float blastPower = 2000.0f;// Blast power
+        float blastXMod = 0.9f;// Blast modifier
 
-    //SHOTGUN PROPULSION
-    float velocityX = 0.0f; // Velocity of the player in the X direction
-    float angle = M_PI / 2;// Blast angle
-    float blastPower = 2000.0f;// Blast power
-    float blastXMod = 0.9f;// Blast modifier
+    public:
+            
+        //Temporary floor
+        Rectangle floor = {0.0f, float(GetScreenHeight()) - 300.0f, float(GetScreenWidth()) / 1.0f, float(GetScreenHeight() / 3.0f)};
 
-    //Shape (temporary)
-    float ShotgunWidth = 20.0f;
-    float ShotgunHeight = radius + 20.0f;
-    Rectangle shotgun;
-
-    //Temporary floor
-    Rectangle floor = {0.0f, float(GetScreenHeight()) - 300.0f, float(GetScreenWidth()) / 1.0f, float(GetScreenHeight() / 3.0f)};
-    
-    //COLLISION DETECTION
-    float boxWH = (radius * 2.0f) / sqrt(2.0f);
-    Rectangle collisionBox = {position.x - boxWH / 2, position.y - boxWH / 2, boxWH, boxWH};
-
-
-    //UPDATE
-    void Update(float dt, const Rectangle& level){
-        //APPLYING MOVEMENT >>>
-        gravity += gravityMod; // Increases gravity (not used in this example)
-
-        float t = CheckCollision(collisionBox, {velocityX, gravity}, dt, level).first; // Checks for collision with the level
-        float tInv = 1.0f - t; // Inverse of t (used for collision response)
-
-        float collisionNormalX = CheckCollision(collisionBox, {velocityX, gravity}, dt, level).second.x; // Gets the collision normal in the X direction
-        float collisionNormalY = CheckCollision(collisionBox, {velocityX, gravity}, dt, level).second.y; // Gets the collision normal in the Y direction
-
-        const float epsilon = 0.1f; // Small value to prevent floating-point precision issues
-
-        // Collision response>>>
-
-        //Temporary material properties (dampening)
-        float dampening = 0.5f;
-        float friction = 0.8f;
-
-        if (t < 1.0f) { // If there is a collision
-            if (abs(collisionNormalX) > epsilon) {velocityX = -velocityX * dampening;} // Reflects the velocity in the X direction if there is a collision
-            if (abs(collisionNormalY) > epsilon) {gravity = -gravity * dampening; velocityX = velocityX * friction;} // Reflects the gravity
-
-            if (abs(gravity) < 300 && t <= epsilon) {gravity = 0;} // If the gravity is small enough, set it to 0 (not used in this example)
-
-            position.y += gravity * tInv* dt; // Applies gravity to the player (not used in this example)
-            position.x += velocityX * tInv * dt; // Applies velocity to the player
+        void Reset(){
+            position = {float(GetScreenWidth()) / 5.0f, float(GetScreenHeight()) - 400.0f};
+            CollisionBoxWH = {(30.0f * 2.0f) / sqrt(2.0f), (30.0f * 2.0f) / sqrt(2.0f)}; // Collision box width and height (not used in this example)
+            collisionBox = {position.x - CollisionBoxWH.x / 2, position.y - CollisionBoxWH.y / 2, CollisionBoxWH.x, CollisionBoxWH.y};
+            velocity = {0.0f, 0.0f};
+            angle = 0.0f;
         }
-        else{
-            position.y += gravity * t * dt; // Applies gravity to the player (not used in this example)
-            position.x += velocityX * t * dt; // Applies velocity to the player
+
+        void InputHandling(){
+
+            angle = atan2(position.y - GetMouseY(), position.x - GetMouseX());
+            shotgun = {position.x, position.y, ShotgunWidth, ShotgunHeight};
+
+            //RESET >>>
+            if (IsKeyPressed(KEY_R)){
+                Reset();
+            }
+
+            //SHOOT >>>
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){// Shotgun propulsion
+                //Propel
+                if (velocity.y < -600 && GetMouseY() > position.y){
+                    velocity.y += blastPower * sin(angle) * 0.6;
+                }
+                else if(velocity.y > 0 && GetMouseY() < position.y){
+                    velocity.y += blastPower * sin(angle) * 1.0;
+                }
+                else{
+                    velocity.y = blastPower * sin(angle);
+                }
+                if ((velocity.x > 400 && GetMouseX() < position.x) || (velocity.x < -400 && GetMouseX() > position.x)){
+                    velocity.x += blastPower * cos(angle) * blastXMod * 0.5;
+                }
+                else{
+                    velocity.x = blastPower * cos(angle) * blastXMod;
+                }
+            }
+
+            angle = angle * RAD2DEG - 90.0f; // Convert angle to degrees
+
         }
-        
-        shotgun = {position.x, position.y, ShotgunWidth, ShotgunHeight};
-        collisionBox = {position.x - boxWH / 2, position.y - boxWH / 2, boxWH, boxWH};
-    }
 
-    void RenderPlayer()const{
-        DrawCircleV(position, radius, MAROON); // Player
-        //DrawRectangleRec(collisionBox, GREEN); // Collision box
-    }
+        void RenderDebugText()const{
+            //Text
+            DrawText(TextFormat("%.2f, %.2f", position.x, position.y), 10, 10, 20, BLUE); // Debug text
+            DrawText(TextFormat("%.2f, %.2f", velocity.x, velocity.y), 10, 40, 20, BLUE); // Debug text
+            DrawText(TextFormat("%.i", GetFPS()), 10, 70, 20, GREEN); // Debug text
+        }
 
-    void RenderShotgun(float angle)const{
-        DrawRectanglePro(shotgun, {ShotgunWidth / 2, ShotgunHeight}, angle, BLUE);
-    }
+        void RenderPlayer()const{
+            DrawCircleV(position, radius, MAROON); // Player
+            //DrawRectangleRec(collisionBox, GREEN); // Collision box
+        }
+
+        void RenderShotgun()const{
+            DrawRectanglePro(shotgun, {ShotgunWidth / 2, ShotgunHeight}, angle, BLUE);
+        }
 };
 
 
@@ -111,12 +166,8 @@ struct PlayerStats{
 //Utils
 float Rad2Deg(float radians);
 
-//Player
-void ResetPlayer(PlayerStats& player);
-void InputHandling(PlayerStats& player);
-
 //Render
-void Render(const PlayerStats& player, const Rectangle& level);
+void Render(const Player& player, const Rectangle& level);
 
 
 // ==========================================
@@ -128,20 +179,19 @@ int main(){
 
     // INITIALIZE WINDOW >>>
     InitWindow(1920, 1080, "GAME"); // Initializes a window low res
-    SetTargetFPS(60); // Sets the target frames per second to 60
+    SetTargetFPS(10000); // Sets the target frames per second to 60
 
     //Spawn player
-    PlayerStats player;
-    ResetPlayer(player);
+    Player player;
+    player.Reset();
 
     //MAIN GAME LOOP >>>
     while(WindowShouldClose() == false){ // Main game loop, runs until the window is closed (close button or ESC key)
-        // UPDATE
-        player.angle = atan2((GetMouseY() - player.position.y), (player.position.x - GetMouseX()));
+        // Update
         float dt = GetFrameTime(); // Gets the time in seconds for the last frame drawn (delta time)
 
-        InputHandling(player);
-        
+        player.InputHandling();
+
         player.Update(dt, player.floor);
 
         //Render
@@ -157,50 +207,6 @@ int main(){
 //=========================================
 // ||            FUNCTIONS               ||
 //=========================================
-
-
-float Rad2Deg(float radians){
-    radians = (-radians * RAD2DEG) - 90;
-    return radians;
-}
-
-
-//For testing (temporary)
-void ResetPlayer(PlayerStats& player){
-    player.position = {float(GetScreenWidth()) / 5.0f, float(GetScreenHeight()) / 5.0f};
-    player.collisionBox = {player.position.x - player.boxWH / 2, player.position.y - player.boxWH / 2, player.boxWH, player.boxWH};
-    player.gravity = 0.0f;
-    player.velocityX = 0.0f;
-    player.angle = M_PI / 2;
-}
-
-
-void InputHandling(PlayerStats& player){
-        //RESET >>>
-        if (IsKeyPressed(KEY_R)){
-            ResetPlayer(player);
-        }
-
-        //SHOOT >>>
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){// Shotgun propulsion
-            //Propel
-            if (player.gravity < -600 && GetMouseY() > player.position.y){
-                player.gravity += -player.blastPower * sin(player.angle) * 0.6;
-            }
-            else if(player.gravity > 0 && GetMouseY() < player.position.y){
-                player.gravity += -player.blastPower * sin(player.angle) * 1.0;
-            }
-            else{
-                player.gravity = -player.blastPower * sin(player.angle);
-            }
-            if ((player.velocityX > 400 && GetMouseX() < player.position.x) || (player.velocityX < -400 && GetMouseX() > player.position.x)){
-                player.velocityX += player.blastPower * cos(player.angle) * player.blastXMod * 0.5;
-            }
-            else{
-                player.velocityX = player.blastPower * cos(player.angle) * player.blastXMod;
-            }
-        }
-}
 
 
 pair<float, Vector2> CheckCollision(const Rectangle& active, Vector2 velocity, float dt, const Rectangle& passive, bool IsLevelCollision){
@@ -260,7 +266,7 @@ pair<float, Vector2> CheckCollision(const Rectangle& active, Vector2 velocity, f
 }
 
 
-void Render(const PlayerStats& player, const Rectangle& level){
+void Render(const Player& player, const Rectangle& level){
     //DRAW >>>
     BeginDrawing(); // Begins drawing
 
@@ -271,13 +277,8 @@ void Render(const PlayerStats& player, const Rectangle& level){
     DrawRectangleRec(level, GRAY);
 
     //Textures (or temporary shapes)
-    player.RenderShotgun(Rad2Deg(player.angle));
+    player.RenderShotgun();
     player.RenderPlayer();
-
-    //Text
-    DrawText(TextFormat("%.2f, %.2f", player.position.x, player.position.y), 10, 10, 20, BLUE); // Debug text
-    DrawText(TextFormat("%.2f", player.velocityX), 10, 40, 20, BLUE); // Debug text
-    DrawText(TextFormat("%.2f", player.gravity), 10, 70, 20, BLUE); // Debug text
-
+    player.RenderDebugText();
     EndDrawing(); // Ends drawing
 }

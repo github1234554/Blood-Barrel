@@ -264,7 +264,7 @@ int main(){
     // This is done using the 'template' keyword followed by a template parameter list.
     //template <typename T> // Template declaration with a type parameter T
     //auto add = [](T a, T b) { // Lambda function that takes two parameters of type T and returns their sum
-    //    return a + b; // Returns the sum of a
+    //return a + b; // Returns the sum of a + b
 
     return 0;
 }
