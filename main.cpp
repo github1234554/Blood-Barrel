@@ -19,7 +19,7 @@ using namespace std; // This line allows you to use standard library functions a
 //=========================================
 
 //Collision (active = emits ray, passive = receiving end of ray)
-pair<float, Vector2> CheckCollision(const Rectangle& active, Vector2 velocity, float dt, const Rectangle& passive, bool IsLevelCollision = true);
+pair<float, Vector2> CheckCollision(const Rectangle& active, Vector2 velocity, float dt, const Rectangle& passive);
 
 
 // ==========================================
@@ -41,11 +41,11 @@ struct Entity{
     
     public:
         //Update transform and collision box
-        void Update(float dt, const Rectangle& level){
+        void Update(float fixed_dt, const Rectangle& level){
             //APPLYING MOVEMENT >>>
-            velocity.y += gravityMod * dt; // Increases gravity (not used in this example)
+            velocity.y += gravityMod * fixed_dt; // Increases gravity (not used in this example)
 
-            pair<float, Vector2> checkCollisionResult = CheckCollision(collisionBox, velocity, dt, level);
+            pair<float, Vector2> checkCollisionResult = CheckCollision(collisionBox, velocity, fixed_dt, level);
 
             t = checkCollisionResult.first; // Checks for collision with the level
             float tInv = 1.0f - t; // Inverse of t (used for collision response)
@@ -59,22 +59,19 @@ struct Entity{
 
             //Temporary material properties (dampening)
             float dampening = 0.5f;
-            float friction = 0.8f;
+            float surface_smoothness = 0.85f;
 
-            if (t < 1.0f) { // If there is a collision
-                if (abs(collisionNormalX) > epsilon) {velocity.x = -velocity.x * dampening;} // Reflects the velocity in the X direction if there is a collision
-                if (abs(collisionNormalY) > epsilon) {velocity.y = -velocity.y * dampening; velocity.x = velocity.x * friction;} // Reflects the gravity
+            position.y += velocity.y * t * fixed_dt; // Applies gravity to the player (not used in this example)
+            position.x += velocity.x * t * fixed_dt; // Applies velocity to the player
 
-                if (abs(velocity.y) < 300 && std::round(t * 10.0f) / 10.0f <= 0.8f) {velocity.y = 0;} // If the gravity is small enough, set it to 0 (not used in this example)
-                std::cout << abs(velocity.y) << ", t: " << std::round(t * 10.0f) / 10.0f << std::endl; // Debugging line to check if the condition is true or false
+            if (abs(collisionNormalX) > epsilon) {velocity.x = -velocity.x * dampening;} // Reflects the velocity in the X direction if there is a collision
+            if (abs(collisionNormalY) > epsilon) {velocity.y = -velocity.y * dampening; velocity.x = velocity.x * surface_smoothness;} // Reflects the gravity and applies friction
 
-                position.y += velocity.y * tInv* dt; // Applies gravity to the player (not used in this example)
-                position.x += velocity.x * tInv * dt; // Applies velocity to the player
-            }
-            else{
-                position.y += velocity.y * t * dt; // Applies gravity to the player (not used in this example)
-                position.x += velocity.x * t * dt; // Applies velocity to the player
-            }
+            if(! (t < 1.0f && velocity.y > -300.0f)) {position.y += velocity.y * tInv * fixed_dt;} // Applies gravity to the player (not used in this example)
+            else {velocity.y = 0.0f;} // Stops the player from falling if there is a collision
+
+            if (! (velocity.y == 0.0f && abs(velocity.x) < 10.0f)) {position.x += velocity.x * tInv * fixed_dt;} // Applies velocity to the player
+            else {velocity.x = 0.0f;} // Stops the player from moving if there is a collision
 
             collisionBox = {position.x - CollisionBoxWH.x / 2, position.y - CollisionBoxWH.y / 2, CollisionBoxWH.x, CollisionBoxWH.y};
         }
@@ -87,11 +84,13 @@ struct Player : public Entity{
         float radius = 30.0f; // Radius of the circle (player)
         float ShotgunWidth = 20.0f;
         float ShotgunHeight = radius + 20.0f;
-        Rectangle shotgun;
+        Rectangle shotgun = {0.0f, 0.0f, ShotgunWidth, ShotgunHeight};
             
         float angle = 0.0f;// Blast angle
         float blastPower = 2000.0f;// Blast power
         float blastXMod = 0.9f;// Blast modifier
+
+        float speed = 900.0f; // Player speed (not used in this example)
 
     public:
             
@@ -106,14 +105,37 @@ struct Player : public Entity{
             angle = 0.0f;
         }
 
-        void InputHandling(){
+        void InputHandling(float fixed_dt){
+
+            float ADspeed = 0.0f; // Temporary variable for speed adjustment based on key input
 
             angle = atan2(position.y - GetMouseY(), position.x - GetMouseX());
-            shotgun = {position.x, position.y, ShotgunWidth, ShotgunHeight};
 
             //RESET >>>
             if (IsKeyPressed(KEY_R)){
                 Reset();
+            }
+
+            if (IsKeyDown(KEY_A)){
+                if (velocity.y == 0){
+                    velocity.x = -speed;
+                }
+                else{
+                    if (abs(ADspeed) <= 500) {ADspeed = -speed * 7.0f * fixed_dt;}
+                    else {ADspeed = -500;}
+                    velocity.x += ADspeed * fixed_dt;
+                }
+            }
+
+            if (IsKeyDown(KEY_D)){
+                if (velocity.y == 0){
+                    velocity.x = speed;
+                }
+                else{
+                    if (abs(ADspeed) <= 500) {ADspeed = speed * 7.0f * fixed_dt;}
+                    else {ADspeed = 500;}
+                    velocity.x += ADspeed * fixed_dt;
+                }
             }
 
             //SHOOT >>>
@@ -133,6 +155,7 @@ struct Player : public Entity{
                 }
                 else{
                     velocity.x = blastPower * cos(angle) * blastXMod;
+                    velocity.x += ADspeed * fixed_dt;
                 }
             }
 
@@ -140,16 +163,20 @@ struct Player : public Entity{
 
         }
 
-        void RenderDebugText()const{
+        void RenderDebugText(float fixed_dt, float dt)const{
             //Text
             DrawText(TextFormat("%.2f, %.2f", position.x, position.y), 10, 10, 20, BLUE); // Debug text
-            DrawText(TextFormat("%.2f, %.2f", velocity.x, velocity.y), 10, 40, 20, BLUE); // Debug text
+            DrawText(TextFormat("%.10f, %.10f", fixed_dt, dt), 10, 40, 20, BLUE); // Debug text
             DrawText(TextFormat("%.i", GetFPS()), 10, 70, 20, GREEN); // Debug text
         }
 
         void RenderPlayer()const{
             DrawCircleV(position, radius, MAROON); // Player
             //DrawRectangleRec(collisionBox, GREEN); // Collision box
+        }
+
+        void UpdateShotgunPosition() {
+            shotgun = {position.x, position.y, ShotgunWidth, ShotgunHeight};
         }
 
         void RenderShotgun()const{
@@ -162,12 +189,8 @@ struct Player : public Entity{
 // ||   POST STRUCTFUNCTION DECLARATIONS   ||
 // ==========================================
 
-
-//Utils
-float Rad2Deg(float radians);
-
 //Render
-void Render(const Player& player, const Rectangle& level);
+void Render(const Player& player, const Rectangle& level, float fixed_dt, float dt);
 
 
 // ==========================================
@@ -178,8 +201,12 @@ void Render(const Player& player, const Rectangle& level);
 int main(){
 
     // INITIALIZE WINDOW >>>
-    InitWindow(1920, 1080, "GAME"); // Initializes a window low res
+    InitWindow(1680, 1050, "GAME"); // Initializes a window low res
     SetTargetFPS(10000); // Sets the target frames per second to 60
+
+    float fixed_dt;
+    float dt;
+    float accumulator = 0.0f; // Accumulator for fixed time step
 
     //Spawn player
     Player player;
@@ -187,15 +214,24 @@ int main(){
 
     //MAIN GAME LOOP >>>
     while(WindowShouldClose() == false){ // Main game loop, runs until the window is closed (close button or ESC key)
-        // Update
-        float dt = GetFrameTime(); // Gets the time in seconds for the last frame drawn (delta time)
+        // Fixed Delta Time
+        fixed_dt = 1.0f / 60.0f; // Fixed time step
+        dt = GetFrameTime(); // Get the time elapsed since the last frame
 
-        player.InputHandling();
+        if (dt > 0.25f) {dt = 0.25f;} // Clamp dt to avoid spiral of death
+        
+        accumulator += dt;
+        
+        while (accumulator >= fixed_dt) {
+            accumulator -= fixed_dt; // Decrease accumulator by fixed_dt
+            player.Update(fixed_dt, player.floor);
+        }
 
-        player.Update(dt, player.floor);
+        player.InputHandling(fixed_dt);
+        player.UpdateShotgunPosition();
 
         //Render
-        Render(player, player.floor);
+        Render(player, player.floor, fixed_dt, dt);
 
         
     }
@@ -209,7 +245,7 @@ int main(){
 //=========================================
 
 
-pair<float, Vector2> CheckCollision(const Rectangle& active, Vector2 velocity, float dt, const Rectangle& passive, bool IsLevelCollision){
+pair<float, Vector2> CheckCollision(const Rectangle& active, Vector2 velocity, float dt, const Rectangle& passive){
     //Minkowski sum (collision box)
     Rectangle minkowskiSum = {passive.x - active.width / 2, passive.y - active.height / 2, passive.width + active.width, passive.height + active.height};
 
@@ -238,35 +274,33 @@ pair<float, Vector2> CheckCollision(const Rectangle& active, Vector2 velocity, f
     float tFarEntry = std::max(tminX, tminY);
     float tNearExit = std::min(tmaxX, tmaxY);
 
-    if (IsLevelCollision){
-        if (tFarEntry <= tNearExit && tFarEntry >= 0 && tFarEntry <= 1) {
-            //Collision detected
-            if (tminX > tminY){
-                if (velocity.x < 0){
-                    return {tFarEntry, {1.0f, 0.0f}}; // Collision on the right side
-                }
-                else{
-                    return {tFarEntry, {-1.0f, 0.0f}}; // Collision on the left side
-                }
+    if (tFarEntry <= tNearExit && tFarEntry >= 0 && tFarEntry <= 1) {
+        //Collision detected
+        if (tminX > tminY){
+            if (velocity.x < 0){
+                return {tFarEntry, {1.0f, 0.0f}}; // Collision on the right side
             }
             else{
-                if (velocity.y < 0){
-                    return {tFarEntry, {0.0f, 1.0f}}; // Collision on the bottom side
-                }
-                else{
-                    return {tFarEntry, {0.0f, -1.0f}}; // Collision on the top side
-                }
+                return {tFarEntry, {-1.0f, 0.0f}}; // Collision on the left side
             }
         }
         else{
-            //No collision
-            return {1.0f, {0.0f, 0.0f}}; //Return 1.0f if no collision detected
+            if (velocity.y < 0){
+                return {tFarEntry, {0.0f, 1.0f}}; // Collision on the bottom side
+            }
+            else{
+                return {tFarEntry, {0.0f, -1.0f}}; // Collision on the top side
+            }
         }
+    }
+    else{
+        //No collision
+        return {1.0f, {0.0f, 0.0f}}; //Return 1.0f if no collision detected
     }
 }
 
 
-void Render(const Player& player, const Rectangle& level){
+void Render(const Player& player, const Rectangle& level, float fixed_dt, float dt){
     //DRAW >>>
     BeginDrawing(); // Begins drawing
 
@@ -279,6 +313,6 @@ void Render(const Player& player, const Rectangle& level){
     //Textures (or temporary shapes)
     player.RenderShotgun();
     player.RenderPlayer();
-    player.RenderDebugText();
+    player.RenderDebugText(fixed_dt, dt);
     EndDrawing(); // Ends drawing
 }
