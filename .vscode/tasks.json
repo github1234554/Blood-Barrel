@@ -12,7 +12,7 @@
                 "${workspaceFolder}/main.cpp",
                 "${workspaceFolder}/Source_files/entity.cpp",
                 "${workspaceFolder}/Source_files/player_input.cpp",
-                "${workspaceFolder}/Source_files/player_shotgun.cpp",
+                "${workspaceFolder}/Source_files/player_initialise.cpp",
                 "${workspaceFolder}/Source_files/render.cpp",
                 "${workspaceFolder}/Source_files/physics.cpp",
                 "-I/opt/homebrew/opt/raylib/include",
