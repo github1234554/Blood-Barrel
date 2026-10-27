@@ -21,7 +21,7 @@ void Player::RenderShotgun()const{
     DrawRectanglePro(shotgun, {ShotgunWidth / 2, ShotgunHeight}, angle, BLUE);
 }
 
-void Render(const Player& player, const Rectangle& level, float fixed_dt, float dt){
+void Render(const Player& player, const Rectangle& level, const Rectangle& level2, float fixed_dt, float dt){
     //DRAW >>>
     BeginDrawing(); // Begins drawing
 
@@ -30,6 +30,7 @@ void Render(const Player& player, const Rectangle& level, float fixed_dt, float 
 
     //Level (temporary)
     DrawRectangleRec(level, GRAY);
+    DrawRectangleRec(level2, GRAY);
 
     //Textures (or temporary shapes)
     player.RenderShotgun();

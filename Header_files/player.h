@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Header_files/entity.h"
+#include "../Header_files/physics.h"
 
 #include <raylib.h>
 
@@ -10,9 +11,9 @@ using namespace std;
 struct Player : public Entity{
     private:
         //Temporary
-        float radius = 30.0f; // Radius of the circle (player)
-        float ShotgunWidth = 20.0f;
-        float ShotgunHeight = radius + 20.0f;
+        float radius = 20.0f; // Radius of the circle (player)
+        float ShotgunWidth = 15.0f;
+        float ShotgunHeight = radius + 15.0f;
         Rectangle shotgun = {0.0f, 0.0f, ShotgunWidth, ShotgunHeight};
             
         float angle = 0.0f;// Blast angle
@@ -25,9 +26,10 @@ struct Player : public Entity{
     public:
             
         //Temporary floor
-        Rectangle floor = {0.0f, float(GetScreenHeight()) - 300.0f, float(GetScreenWidth()) / 1.0f, float(GetScreenHeight() / 3.0f)};
+        Rectangle floor = {0.0f, float(GetScreenHeight()) - 300.0f, float(GetScreenWidth()), float(GetScreenHeight() / 3.0f)};
+        Rectangle floor2 = {500.0f, float(GetScreenHeight()) - 900.0f, float(GetScreenWidth()), float(GetScreenHeight() / 3.0f)};
 
-        void Reset();
+        void Reset(bool isInit);
         void InputHandling(float fixed_dt);
         
         void UpdateShotgunPosition();

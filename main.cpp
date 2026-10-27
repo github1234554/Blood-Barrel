@@ -12,7 +12,7 @@ int main(){
 
     // INITIALIZE WINDOW >>>
     InitWindow(1680, 1050, "GAME"); // Initializes a window low res
-    SetTargetFPS(75); // Sets the target frames per second to 75
+    SetTargetFPS(2000); // Sets the target frames per second to 75
 
     float fixed_dt = 1.0f / 240.0f; // Fixed delta time for physics updates
     float dt;
@@ -20,7 +20,7 @@ int main(){
 
     //Spawn player
     Player player;
-    player.Reset();// Initializes the player position, collision box, and velocity
+    player.Reset(true);// Initializes the player position, collision box, and velocity
 
     //MAIN GAME LOOP >>>
     while(WindowShouldClose() == false){ // Main game loop, runs until the window is closed (close button or ESC key)
@@ -40,7 +40,7 @@ int main(){
         player.UpdateShotgunPosition();
 
         //Render
-        Render(player, player.floor, fixed_dt, dt);
+        Render(player, player.floor, player.floor2, fixed_dt, dt);
 
         
     }

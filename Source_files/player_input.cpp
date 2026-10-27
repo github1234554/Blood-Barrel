@@ -4,12 +4,16 @@
 
 using namespace std;
 
-void Player::Reset(){
+void Player::Reset(bool isInit){
     position = {float(GetScreenWidth()) / 5.0f, float(GetScreenHeight()) - 400.0f};
-    CollisionBoxWH = {(30.0f * 2.0f) / sqrt(2.0f), (30.0f * 2.0f) / sqrt(2.0f)}; // Collision box width and height (not used in this example)
-    collisionBox = {position.x - CollisionBoxWH.x / 2, position.y - CollisionBoxWH.y / 2, CollisionBoxWH.x, CollisionBoxWH.y};
+    CollisionBoxWH = {(20.0f * 2.0f) / sqrt(2.0f), (20.0f * 2.0f) / sqrt(2.0f)}; // Collision box width and height (not used in this example)
+    if (isInit){
+        boxID = add({position.x - CollisionBoxWH.x / 2, position.y - CollisionBoxWH.y / 2, CollisionBoxWH.x, CollisionBoxWH.y}, false, collisionSet);
+        add(floor, true, collisionSet);
+        add(floor2, true, collisionSet);
+    }
     velocity = {0.0f, 0.0f};
-            angle = 0.0f;
+    angle = 0.0f;
 }
 
 void Player::InputHandling(float fixed_dt){
@@ -18,7 +22,7 @@ void Player::InputHandling(float fixed_dt){
 
             //RESET >>>
             if (IsKeyPressed(KEY_R)){
-                Reset();
+                Reset(false);
             }
 
             if (IsKeyDown(KEY_A)){

@@ -1,6 +1,6 @@
 #include "../Header_files/entity.h"
-#include "../Header_files/physics.h"
 
+#include <iostream>
 #include <raylib.h>
 #include <utility>
 #include <vector>
@@ -11,7 +11,7 @@ void Entity::Update(float fixed_dt, const Rectangle& level){
             //APPLYING MOVEMENT >>>
             velocity.y += gravityMod * fixed_dt; // Increases gravity (not used in this example)
 
-            pair<float, Vector2> checkCollisionResult = CheckCollision(collisionBox, velocity, fixed_dt, level);
+            pair<float, Vector2> checkCollisionResult = CollisionHandler(collisionBox, collisionSet, velocity, fixed_dt);
 
             t = checkCollisionResult.first; // Checks for collision with the level
             float tInv = 1.0f - t; // Inverse of t (used for collision response)
@@ -39,5 +39,6 @@ void Entity::Update(float fixed_dt, const Rectangle& level){
             if (! (velocity.y == 0.0f && abs(velocity.x) < 10.0f)) {position.x += velocity.x * tInv * fixed_dt;} // Applies velocity to the player
             else {velocity.x = 0.0f;} // Stops the player from moving if there is a collision
 
-            collisionBox = {position.x - CollisionBoxWH.x / 2, position.y - CollisionBoxWH.y / 2, CollisionBoxWH.x, CollisionBoxWH.y};
+            update(boxID, position, collisionSet);
+            collisionBox = get<0>(*checkID(boxID, collisionSet).second);
         }

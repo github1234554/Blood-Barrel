@@ -1,12 +1,14 @@
 #pragma once
 
+#include "../Header_files/physics.h"
+
 #include <raylib.h>
 #include <vector>
 
 using namespace std;
 
 //ENTITY STRUCT >>>
-struct Entity{
+struct Entity : public CollisionManager{
     protected:
         //Transform
         Vector2 position = {0.0f, 0.0f}; // Player position
@@ -17,6 +19,7 @@ struct Entity{
         //Collision
         Vector2 CollisionBoxWH;
         Rectangle collisionBox;
+        int boxID = -1;
     
     public:
         //Update transform and collision box

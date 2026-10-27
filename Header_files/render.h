@@ -4,4 +4,4 @@
 
 #include <raylib.h>
 
-void Render(const Player& player, const Rectangle& level, float fixed_dt, float dt);
+void Render(const Player& player, const Rectangle& level, const Rectangle& level2, float fixed_dt, float dt);
