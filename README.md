@@ -3,7 +3,7 @@
 ## The idea
 _**Blood Barrel is a fast paced 2D Roguelike where your parasitic shotgun constantly needs blood and will gladly take it from you... but you might want that.**_
 
-Inspired by how bad the MacBook Air 2020 M1 is for gaming, this game is a personal project intended to have very minimal computer requirements and to run smoothly on most _**low-end devices**_.
+Inspired by how bad the MacBook Air 2020 M1 is for gaming, this game is a personal project with a custom engine intended to have very minimal computer requirements and to run smoothly on most _**low-end devices**_.
 While there is no strict age limit, this game is meant for a more mature audience as its main mechanic is _**blood**_.
 The imagery and combat may be too violent for smaller ages or those with _**fear of blood (hematophobia)**_ so be advised.
 
