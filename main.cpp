@@ -11,7 +11,7 @@ using namespace std; // This line allows you to use standard library functions a
 int main(){
 
     // INITIALIZE WINDOW >>>
-    InitWindow(1680, 1050, "GAME"); // Initializes a window low res
+    InitWindow(2560, 1440, "GAME"); // Initializes a window low res
     SetTargetFPS(2000); // Sets the target frames per second to 75
 
     float fixed_dt = 1.0f / 240.0f; // Fixed delta time for physics updates
