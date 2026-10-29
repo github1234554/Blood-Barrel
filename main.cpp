@@ -33,7 +33,7 @@ int main(){
         
         while (accumulator >= fixed_dt) {
             accumulator -= fixed_dt; // Decrease accumulator by fixed_dt
-            player.Update(fixed_dt, player.floor);
+            player.Update(fixed_dt);
         }
 
         player.InputHandling(fixed_dt);

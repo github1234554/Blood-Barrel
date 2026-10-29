@@ -23,5 +23,5 @@ struct Entity : public CollisionManager{
     
     public:
         //Update transform and collision box
-        void Update(float fixed_dt, const Rectangle& level);
+        void Update(float fixed_dt);
 };

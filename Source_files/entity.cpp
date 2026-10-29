@@ -7,11 +7,11 @@
 
 using namespace std;
 
-void Entity::Update(float fixed_dt, const Rectangle& level){
+void Entity::Update(float fixed_dt){
             //APPLYING MOVEMENT >>>
             velocity.y += gravityMod * fixed_dt; // Increases gravity (not used in this example)
 
-            pair<float, Vector2> checkCollisionResult = CollisionHandler(collisionBox, collisionSet, velocity, fixed_dt);
+            pair<float, Vector2> checkCollisionResult = CollisionHandler(boxID, collisionBox, collisionSet, velocity, fixed_dt);
 
             t = checkCollisionResult.first; // Checks for collision with the level
             float tInv = 1.0f - t; // Inverse of t (used for collision response)
@@ -40,5 +40,8 @@ void Entity::Update(float fixed_dt, const Rectangle& level){
             else {velocity.x = 0.0f;} // Stops the player from moving if there is a collision
 
             update(boxID, position, collisionSet);
-            collisionBox = get<0>(*checkID(boxID, collisionSet).second);
+
+            pair <bool, vector< tuple <Rectangle, bool, int> >::iterator > isCollidable = checkID(boxID, collisionSet);
+            if(isCollidable.first){collisionBox = get<0>(*isCollidable.second);}
+            else{collisionBox = {0.0f,0.0f,0.0f,0.0f};}
         }

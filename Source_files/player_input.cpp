@@ -19,10 +19,19 @@ void Player::Reset(bool isInit){
 void Player::InputHandling(float fixed_dt){
 
             angle = atan2(position.y - GetMouseY(), position.x - GetMouseX());
+            ADspeed = 0.0f;
 
             //RESET >>>
             if (IsKeyPressed(KEY_R)){
                 Reset(false);
+            }
+
+            if (IsKeyPressed(KEY_BACKSPACE)){
+                remove(boxID, collisionSet);
+            }
+
+            if (IsKeyPressed(KEY_ENTER)){
+                boxID = add({position.x - CollisionBoxWH.x / 2, position.y - CollisionBoxWH.y / 2, CollisionBoxWH.x, CollisionBoxWH.y}, false, collisionSet);
             }
 
             if (IsKeyDown(KEY_A)){
@@ -30,7 +39,7 @@ void Player::InputHandling(float fixed_dt){
                     velocity.x = -speed;
                 }
                 else{
-                    if (abs(ADspeed) <= 500) {ADspeed = -speed * 7.0f * fixed_dt;}
+                    if (abs(ADspeed) <= 500) {ADspeed = -speed * 35.0f * fixed_dt;}
                     else {ADspeed = -500;}
                     velocity.x += ADspeed * fixed_dt;
                 }
@@ -41,7 +50,7 @@ void Player::InputHandling(float fixed_dt){
                     velocity.x = speed;
                 }
                 else{
-                    if (abs(ADspeed) <= 500) {ADspeed = speed * 7.0f * fixed_dt;}
+                    if (abs(ADspeed) <= 500) {ADspeed = speed * 35.0f * fixed_dt;}
                     else {ADspeed = 500;}
                     velocity.x += ADspeed * fixed_dt;
                 }

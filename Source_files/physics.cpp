@@ -76,12 +76,12 @@ pair<float, Vector2> CollisionManager::CheckCollision(const Rectangle& active, c
     }
 }
 
-pair<float, Vector2> CollisionManager::CollisionHandler(const Rectangle collisionBox, const vector< tuple <Rectangle, bool, int> >& collisionSet, const Vector2 velocity, const float fixed_dt){
+pair<float, Vector2> CollisionManager::CollisionHandler(int ID, const Rectangle collisionBox, const vector< tuple <Rectangle, bool, int> >& collisionSet, const Vector2 velocity, const float fixed_dt){
     float t = 1.0f;
     Vector2 normal = {0.0f, 0.0f};
     for (const tuple <Rectangle, bool, int>& box : collisionSet){
         pair<float, Vector2> collisionResult = CheckCollision(collisionBox, velocity, fixed_dt, get<0>(box));
-        if (collisionResult.first < t){
+        if ((collisionResult.first < t) && (get<2>(box) != ID)){
             t = collisionResult.first;
             normal = collisionResult.second;
         }
@@ -108,11 +108,12 @@ int CollisionManager::add(Rectangle collisionBox, bool isLevel, vector< tuple <R
     return get<2>(box);
 }
 
-void CollisionManager::remove(int ID, vector< tuple <Rectangle, bool, int> >& collisionSet){
+void CollisionManager::remove(int& ID, vector< tuple <Rectangle, bool, int> >& collisionSet){
     pair <bool, vector< tuple <Rectangle, bool, int> >::iterator > boxInSet = checkID(ID, collisionSet);
     if (boxInSet.first){
         collisionSet.erase(boxInSet.second);
     }
+    ID = -1;
 }
 void CollisionManager::update(int ID, Vector2 position, vector< tuple <Rectangle, bool, int> >& collisionSet){
     pair <bool, vector< tuple <Rectangle, bool, int> >::iterator > boxInSet = checkID(ID, collisionSet);

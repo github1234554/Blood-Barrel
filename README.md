@@ -11,10 +11,12 @@ The imagery and combat may be too violent for smaller ages or those with _**fear
 ### Current progress
 Blood Barrel is still under _**EARLY DEVELOPMENT**_ and is _**NOT AVAILABLE FOR DOWNLOAD**_ as of now.
 
+~~Currently developing the Collision Handler which will allow collision between multiple objects rather than just the current max of 2, as well as soon handling unique collision responses for entities and even levels.~~
+
 ![Game currently](Images/Screenshot_2026-10-27_at_11.41.06.jpeg)
 
-Currently developing the _**Collision Handler**_ which will allow collision between multiple objects rather than just the current max of 2, as well as soon handling unique collision responses for entities and even levels.
-At the current pace the first prototype of the game is set to release _**late December**_ however this isn't a definitive date.
+Currently developing a tilemap system for the level for ease of level creation and prodeural generation.
+At the current pace the first prototype of the game is set to release late December however this isn't a definitive date.
 
 ### Details
 This project is being developed in _**C++ (version 14)**_ using the _**Raylib library (version 6.0)**_.
